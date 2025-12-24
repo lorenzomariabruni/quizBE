@@ -1,0 +1,54 @@
+{
+  "questions": [
+    {
+      "question": "Qual è la capitale dell'Italia?",
+      "answers": ["Milano", "Roma", "Napoli", "Firenze"],
+      "correct_answer": 1
+    },
+    {
+      "question": "Quanti sono i continenti?",
+      "answers": ["5", "6", "7", "8"],
+      "correct_answer": 2
+    },
+    {
+      "question": "Chi ha dipinto la Gioconda?",
+      "answers": ["Michelangelo", "Raffaello", "Leonardo da Vinci", "Caravaggio"],
+      "correct_answer": 2
+    },
+    {
+      "question": "Qual è il pianeta più grande del sistema solare?",
+      "answers": ["Terra", "Marte", "Saturno", "Giove"],
+      "correct_answer": 3
+    },
+    {
+      "question": "In che anno è caduto il muro di Berlino?",
+      "answers": ["1985", "1989", "1991", "1995"],
+      "correct_answer": 1
+    },
+    {
+      "question": "Quale linguaggio di programmazione è usato principalmente per sviluppo web backend?",
+      "answers": ["HTML", "CSS", "JavaScript", "Python"],
+      "correct_answer": 3
+    },
+    {
+      "question": "Quanti bit ci sono in un byte?",
+      "answers": ["4", "8", "16", "32"],
+      "correct_answer": 1
+    },
+    {
+      "question": "Qual è il protocollo standard per il trasferimento sicuro di dati sul web?",
+      "answers": ["HTTP", "HTTPS", "FTP", "SMTP"],
+      "correct_answer": 1
+    },
+    {
+      "question": "Chi ha fondato Microsoft?",
+      "answers": ["Steve Jobs", "Bill Gates", "Mark Zuckerberg", "Elon Musk"],
+      "correct_answer": 1
+    },
+    {
+      "question": "Qual è la velocità della luce nel vuoto?",
+      "answers": ["300.000 km/s", "150.000 km/s", "450.000 km/s", "600.000 km/s"],
+      "correct_answer": 0
+    }
+  ]
+}
