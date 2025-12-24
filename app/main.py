@@ -10,10 +10,10 @@ load_dotenv()
 
 app = FastAPI(title="Quiz Backend", version="1.0.0")
 
-# CORS
+# CORS - Allow all origins for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:4200").split(","),
+    allow_origins=["*"],  # Allow all origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
