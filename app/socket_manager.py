@@ -166,7 +166,7 @@ async def join_session(sid, data):
                 'total_questions': len(session.questions),
                 'question': question.question,
                 'answers': shuffled_answers,
-                'time_limit': 10,
+                'time_limit': 25,
                 'already_answered': already_answered,
                 'type': question.question_type,
                 'image_url': image_url
@@ -291,7 +291,7 @@ async def next_question(session_id: str):
         'total_questions': len(session.questions),
         'question': question.question,
         'answers': shuffled_answers,
-        'time_limit': 10,
+        'time_limit': 25,
         'already_answered': False,
         'type': question.question_type,
         'image_url': image_url
@@ -301,7 +301,7 @@ async def next_question(session_id: str):
     await sio.emit('new_question', question_data, room=session_id)
     
     print(f"⏱️ Starting 10 second countdown\n")
-    await countdown_timer(session_id, 10)
+    await countdown_timer(session_id, 25)
 
 
 async def countdown_timer(session_id: str, duration: int):

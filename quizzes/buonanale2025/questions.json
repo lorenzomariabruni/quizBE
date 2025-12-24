@@ -1,0 +1,355 @@
+{
+  "questions": [
+    {
+      "id": "68c96012-e9fa-4dae-a4fd-0189cf4efc83",
+      "question": "Kosa ciera in quella siringa",
+      "answers": [
+        "Il sangue di totti",
+        "La sborra di mauro pompei",
+        "Le lacrime di cristian",
+        "L’amaro di matteo"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "0e40e9fd-ee0e-435e-8011-5f2006bb034c.jpeg"
+    },
+    {
+      "id": "a3155cbe-812c-443d-9c7c-947f1a0ec703",
+      "question": "Dove è stata scattata questa foto di Cristian?",
+      "answers": [
+        "Villa Sterco",
+        "Casa di Cristian a Tiburtina",
+        "In mezzo hai lupi",
+        "Napoli"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "35e6f7aa-2836-4b0d-a0df-40adfa5637d4.jpeg"
+    },
+    {
+      "id": "7dfc3bb8-0947-414e-b4c7-5d14566b5b2c",
+      "question": "Cosa ha acquistato Marco al mercatino Telethon di Natale",
+      "answers": [
+        "Un tappeto di Gesù e Maria",
+        "La maglia della Lazio",
+        "La dignità",
+        "Il sangue di San Gennaro"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "93341180-9ea0-4a72-8978-12b56ab03cda.jpeg"
+    },
+    {
+      "id": "e9174c08-6e4e-4e08-a7de-58d8d1ecfc9b",
+      "question": "Chi é un elfo libero",
+      "answers": [
+        "Dobby",
+        "cristian",
+        "Puma",
+        "Matteo"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "bc7737a1-e696-42c0-a987-644b9a0a1c1e.jpeg"
+    },
+    {
+      "id": "9afbdf7e-732a-4c72-ab71-d10b2ccc1d8f",
+      "question": "In che occasione è stata scattata questa foto?",
+      "answers": [
+        "Compleanno di 30 anni di Caterina",
+        "Compleanno di Gesù",
+        "Battesimo di Nathan",
+        "Compleanno di Ersilia"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "85897aa0-36df-4bdd-83ce-0a24a52ccb9c.jpeg"
+    },
+    {
+      "id": "23981ff2-75ad-4777-9ba6-8504e2001413",
+      "question": "Perché si è rotta la bottiglia",
+      "answers": [
+        "Carico assiale su parete laterale per mancanza vetro",
+        "Carico tangenziale per mancanza vetro per pressione coclea",
+        "Che cazzo me ne frega",
+        "Le bottiglie sbattono"
+      ],
+      "correct_answer": 2,
+      "type": "image",
+      "image": "6e279c14-e785-4abf-ba86-db311e9f1b6b.jpeg"
+    },
+    {
+      "id": "7db51f0b-2ecd-43f6-8a0e-d3e248f3d846",
+      "question": "Chi ha piu problemi",
+      "answers": [
+        "Puma",
+        "Marco",
+        "Cristian",
+        "Jacopo"
+      ],
+      "correct_answer": 2,
+      "type": "text",
+      "image": null
+    },
+    {
+      "id": "f66cd106-a25b-419c-9e4e-08bc7fd63aba",
+      "question": "Quanto è bello roberto da 1 a Cristian",
+      "answers": [
+        "Infinito",
+        "Tanto",
+        "Troppo",
+        "Per me roberto è gay ma questa risposta è sbagliata"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "a687fb89-1489-42a0-b3b5-69960eab048d.jpg"
+    },
+    {
+      "id": "dc57d7bf-fe74-466f-90e3-5d835e4d8f16",
+      "question": "Completa la frase: Attento …",
+      "answers": [
+        "Hai lupi",
+        "Ai lupi",
+        "Ahi lupi",
+        "Alle H"
+      ],
+      "correct_answer": 0,
+      "type": "text",
+      "image": null
+    },
+    {
+      "id": "ee784e2e-7bb9-4d76-8399-ef6a302bb6f2",
+      "question": "Cosa successe in quella campagna?",
+      "answers": [
+        "Il puma evacuó dalla bocca",
+        "Matteo cacó dietro ad una fratta",
+        "Vitozzi pomició con cristian",
+        "Cristian scoprì di essere etero"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "32606bc8-7d52-4c49-80be-b893c447ea60.png"
+    },
+    {
+      "id": "03c39e41-f820-4b72-a1cb-16083269582d",
+      "question": "Chi ha il caschetto più bello",
+      "answers": [
+        "Nino D’Angelo",
+        "Marzia",
+        "Il puma",
+        "Raffaella carra"
+      ],
+      "correct_answer": 1,
+      "type": "image",
+      "image": "0c1e8798-8ff7-420f-bf92-7c69a20a8edf.jpeg"
+    },
+    {
+      "id": "46eb0324-a5ae-436b-877a-4081effb4ade",
+      "question": "Chi ha fatto questi fantastici dolci di alta pasticceria?",
+      "answers": [
+        "La mamma di Pierluigi Cappella",
+        "Ersilia",
+        "Margherita",
+        "Marco Curai"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "ad2eb367-1a40-4e41-a4ac-d60cb907d864.jpg"
+    },
+    {
+      "id": "7865e40d-d0f9-42fd-ba5c-de79b14c8ec5",
+      "question": "Dove si trova babbo natale?",
+      "answers": [
+        "Al bagno",
+        "Al portone di entrata",
+        "In camera da letto",
+        "A casa di Cristian"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "97a79fac-1ff9-4b57-93c1-0801c171c207.jpg"
+    },
+    {
+      "id": "26ff060e-5c62-4349-b3c7-79d1c2a881e7",
+      "question": "Chi dobbiamo ringraziare per questa fantastica giornata?",
+      "answers": [
+        "Il dottore culomenico",
+        "La mamma di pierluigi cappella",
+        "Caterina",
+        "Zia concetta di Gavignano"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "44846ac6-2ff7-46e0-aaf5-488bcd862eba.jpg"
+    },
+    {
+      "id": "6b42a543-d7b2-427c-95d4-b5e99ede5212",
+      "question": "Chi è il più bello",
+      "answers": [
+        "Marco",
+        "Frank",
+        "Vanessa rosati",
+        "Tutti"
+      ],
+      "correct_answer": 3,
+      "type": "image",
+      "image": "388b0374-d376-4986-99a6-2a3d0c79b5c5.jpg"
+    },
+    {
+      "id": "38c01402-8f66-4b5d-84b0-bd26a8d124b7",
+      "question": "Quanto e’ lungo il pene di jacopino?",
+      "answers": [
+        "< 70 mm",
+        "80 mm",
+        "140 mm",
+        "150 mm"
+      ],
+      "correct_answer": 0,
+      "type": "text",
+      "image": null
+    },
+    {
+      "id": "0dae49cf-8236-463d-be85-d8f10759cd95",
+      "question": "A chi somiglia Cristian?",
+      "answers": [
+        "Maurizio costanzo",
+        "Pablo Escobar",
+        "Olindo",
+        "Stalin"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "0d0db1d7-05a1-41d4-9c4f-17d6d523f1e0.jpeg"
+    },
+    {
+      "id": "734138c4-b314-4b2b-91e5-6432efe94670",
+      "question": "In che evento è stata scattata questa foto?",
+      "answers": [
+        "Compleanno Sara Fontana",
+        "Compleanno Puma",
+        "Compleanno Mollicone",
+        "Compleanno Sarao"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "c995cb67-7e55-46b2-9fe4-aa60bb42809e.jpeg"
+    },
+    {
+      "id": "52b8d294-6417-427c-b5e1-db05515a4607",
+      "question": "Come si fa chiamare la mamma di roberto?",
+      "answers": [
+        "Maria",
+        "Liliana",
+        "Giuliana",
+        "Melissa"
+      ],
+      "correct_answer": 0,
+      "type": "text",
+      "image": null
+    },
+    {
+      "id": "66a7839f-fe90-4e3c-b7fe-573c84c300bc",
+      "question": "Chi ha meno capelli tra i non pelati del gruppo?",
+      "answers": [
+        "cristian",
+        "marco",
+        "matteo",
+        "power"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "ca8d5bf7-a91d-4c45-b695-97b9461ed1cf.jpeg"
+    },
+    {
+      "id": "be108e72-51a9-4367-b72a-3430f0b8512d",
+      "question": "Quanti capelli ci sono in questa foto",
+      "answers": [
+        "Capelli?",
+        "10",
+        "100",
+        "1000"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "49d1b08e-7e9f-4589-ab1e-3234bc62237b.jpeg"
+    },
+    {
+      "id": "4f3040d5-6758-4614-a88a-425f2b036115",
+      "question": "A cosa stava pensando mattei",
+      "answers": [
+        "Alla mamma di pierluigi cappella",
+        "Caterina",
+        "Babbo natale di legno",
+        "Non lo si"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "234592d7-af05-47d6-b4c4-cb41c7ec9cb6.jpeg"
+    },
+    {
+      "id": "d798f7af-abb9-46b8-ac55-5b7e86d04c25",
+      "question": "chi soffre di diarrea seborroica?",
+      "answers": [
+        "cristian",
+        "roberto",
+        "caterina",
+        "matteo"
+      ],
+      "correct_answer": 2,
+      "type": "image",
+      "image": "c3b3866d-7f00-41b6-8c0c-85c9c8943ad2.jpeg"
+    },
+    {
+      "id": "8220ccb0-2044-4445-a34f-6e87e3dcd643",
+      "question": "Quant è la glicemia di Cristian?",
+      "answers": [
+        "98",
+        "100",
+        "56",
+        "23,1"
+      ],
+      "correct_answer": 1,
+      "type": "text",
+      "image": null
+    },
+    {
+      "id": "5503a12e-3a4a-4626-8b77-876fe6ba3691",
+      "question": "Chi sta chiamando culomenico?",
+      "answers": [
+        "Ersilia",
+        "Un paziente moribondo",
+        "Un medico più competente",
+        "Il puma"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "3fdb7db2-ae31-4af6-bd7d-a602149b6cc3.jpeg"
+    },
+    {
+      "id": "9611dffe-f153-4123-a420-85cab60d6d5c",
+      "question": "Chi ha vinto il premio BNL Call for ideas?",
+      "answers": [
+        "Il puma",
+        "Lorenzo",
+        "Maria",
+        "Bruni"
+      ],
+      "correct_answer": 0,
+      "type": "text",
+      "image": null
+    },
+    {
+      "id": "ab2127e1-ed98-434e-874e-85de3df61eb8",
+      "question": "A cosa stava pensando matteo?",
+      "answers": [
+        "Al botto lanciato da marco sul balcone",
+        "Ai massimi sistemi",
+        "Alla signora che gli ha regalato 40 uova",
+        "Ai capelli di cristian"
+      ],
+      "correct_answer": 0,
+      "type": "image",
+      "image": "10ad81c4-cd6a-4f2d-8072-48905387e818.jpeg"
+    }
+  ]
+}
