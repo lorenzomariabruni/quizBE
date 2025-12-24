@@ -8,12 +8,15 @@ sio = socketio.AsyncServer(
     async_mode='asgi',
     cors_allowed_origins='*',
     logger=True,
-    engineio_logger=True
+    engineio_logger=True,
+    ping_timeout=60,  # Increased timeout for mobile devices
+    ping_interval=25,  # More frequent pings
 )
 
 # In-memory storage
 sessions: Dict[str, GameSession] = {}
 players: Dict[str, Player] = {}  # sid -> Player
+player_sessions: Dict[str, str] = {}  # player_name -> session_id (for recovery)
 
 
 @sio.event
@@ -27,11 +30,10 @@ async def disconnect(sid):
     print(f"Client disconnected: {sid}")
     if sid in players:
         player = players[sid]
-        if player.session_id in sessions:
-            session = sessions[player.session_id]
-            session.players = [p for p in session.players if p.sid != sid]
-            await sio.emit('player_left', {'player_name': player.name}, room=player.session_id)
-        del players[sid]
+        print(f"Player {player.name} disconnected but keeping in session for recovery")
+        # Don't remove player immediately - allow reconnection
+        # Just mark as disconnected
+        player.connected = False
 
 
 @sio.event
@@ -69,26 +71,80 @@ async def join_session(sid, data):
     
     session = sessions[session_id]
     
-    if session.state != 'waiting':
-        await sio.emit('error', {'message': 'Game already started'}, room=sid)
-        return
+    # Check if player already exists (reconnection scenario)
+    existing_player = None
+    for p in session.players:
+        if p.name == player_name:
+            existing_player = p
+            break
     
-    player = Player(sid=sid, name=player_name, session_id=session_id)
-    players[sid] = player
-    session.players.append(player)
-    
-    await sio.enter_room(sid, session_id)
-    await sio.emit('joined_session', {
-        'player_name': player_name,
-        'session_id': session_id
-    }, room=sid)
-    
-    # Notify all players
-    await sio.emit('player_joined', {
-        'player_name': player_name,
-        'total_players': len(session.players)
-    }, room=session_id)
-    print(f"Player {player_name} joined session {session_id}")
+    if existing_player:
+        # This is a reconnection
+        print(f"Existing player {player_name} rejoining session {session_id}")
+        
+        # Update socket ID
+        old_sid = existing_player.sid
+        if old_sid in players:
+            del players[old_sid]
+        
+        existing_player.sid = sid
+        existing_player.connected = True
+        players[sid] = existing_player
+        
+        await sio.enter_room(sid, session_id)
+        
+        await sio.emit('joined_session', {
+            'player_name': player_name,
+            'session_id': session_id,
+            'reconnected': True,
+            'game_state': session.state,
+            'total_score': existing_player.total_score
+        }, room=sid)
+        
+        # Send current game state
+        if session.state == 'playing' and session.current_question_index >= 0:
+            question = session.questions[session.current_question_index]
+            already_answered = any(
+                a.question_index == session.current_question_index 
+                for a in existing_player.answers
+            )
+            
+            await sio.emit('new_question', {
+                'question_number': session.current_question_index + 1,
+                'total_questions': len(session.questions),
+                'question': question.question,
+                'answers': question.answers,
+                'time_limit': 10,
+                'already_answered': already_answered
+            }, room=sid)
+        
+        print(f"Player {player_name} successfully reconnected")
+    else:
+        # New player joining
+        if session.state != 'waiting':
+            await sio.emit('error', {'message': 'Game already started'}, room=sid)
+            return
+        
+        player = Player(sid=sid, name=player_name, session_id=session_id, connected=True)
+        players[sid] = player
+        session.players.append(player)
+        player_sessions[player_name] = session_id
+        
+        await sio.enter_room(sid, session_id)
+        await sio.emit('joined_session', {
+            'player_name': player_name,
+            'session_id': session_id,
+            'reconnected': False,
+            'game_state': session.state
+        }, room=sid)
+        
+        # Notify all players
+        await sio.emit('player_joined', {
+            'player_name': player_name,
+            'total_players': len([p for p in session.players if p.connected])
+        }, room=session_id)
+        
+        print(f"Player {player_name} joined session {session_id}")
 
 
 @sio.event
@@ -132,7 +188,8 @@ async def next_question(session_id: str):
         'total_questions': len(session.questions),
         'question': question.question,
         'answers': question.answers,
-        'time_limit': 10
+        'time_limit': 10,
+        'already_answered': False
     }, room=session_id)
     
     # Start timer

@@ -21,6 +21,7 @@ class Player(BaseModel):
     session_id: str
     total_score: float = 0.0
     answers: List[Answer] = []
+    connected: bool = True
 
 
 class GameSession(BaseModel):
