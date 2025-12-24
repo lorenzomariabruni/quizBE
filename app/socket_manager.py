@@ -1,5 +1,6 @@
 import socketio
 import asyncio
+import random
 from typing import Dict, List
 from app.models import GameSession, Player, Question, Answer
 from app.game_logic import calculate_score, load_questions
@@ -116,6 +117,16 @@ async def join_session(sid, data):
                 for a in existing_player.answers
             )
             
+            # Get shuffled answers for this question
+            if not hasattr(session, 'question_shuffles'):
+                session.question_shuffles = {}
+            
+            shuffled_data = session.question_shuffles.get(session.current_question_index)
+            if shuffled_data:
+                shuffled_answers = shuffled_data['answers']
+            else:
+                shuffled_answers = question.answers
+            
             # Build image URL if question has image
             image_url = None
             if question.question_type == 'image' and question.image and session.quiz_name:
@@ -125,7 +136,7 @@ async def join_session(sid, data):
                 'question_number': session.current_question_index + 1,
                 'total_questions': len(session.questions),
                 'question': question.question,
-                'answers': question.answers,
+                'answers': shuffled_answers,
                 'time_limit': 10,
                 'already_answered': already_answered,
                 'type': question.question_type,
@@ -175,6 +186,11 @@ async def start_game(sid, data):
         return
     
     session.state = 'playing'
+    
+    # Initialize shuffle mapping for questions
+    if not hasattr(session, 'question_shuffles'):
+        session.question_shuffles = {}
+    
     await sio.emit('game_started', {}, room=session_id)
     
     await next_question(session_id)
@@ -192,6 +208,26 @@ async def next_question(session_id: str):
     question = session.questions[session.current_question_index]
     session.question_start_time = asyncio.get_event_loop().time()
     
+    # Shuffle answers and track the mapping
+    original_answers = question.answers.copy()
+    shuffled_indices = list(range(len(original_answers)))
+    random.shuffle(shuffled_indices)
+    
+    shuffled_answers = [original_answers[i] for i in shuffled_indices]
+    
+    # Find new position of correct answer
+    new_correct_index = shuffled_indices.index(question.correct_answer)
+    
+    # Store shuffle mapping for this question
+    if not hasattr(session, 'question_shuffles'):
+        session.question_shuffles = {}
+    
+    session.question_shuffles[session.current_question_index] = {
+        'answers': shuffled_answers,
+        'original_to_shuffled': shuffled_indices,
+        'correct_index': new_correct_index
+    }
+    
     # Build image URL if question has image
     image_url = None
     if question.question_type == 'image' and question.image and session.quiz_name:
@@ -201,7 +237,7 @@ async def next_question(session_id: str):
         'question_number': session.current_question_index + 1,
         'total_questions': len(session.questions),
         'question': question.question,
-        'answers': question.answers,
+        'answers': shuffled_answers,
         'time_limit': 10,
         'already_answered': False,
         'type': question.question_type,
@@ -228,6 +264,10 @@ async def show_question_results(session_id: str):
     session = sessions[session_id]
     question = session.questions[session.current_question_index]
     
+    # Get shuffle data for this question
+    shuffle_data = session.question_shuffles.get(session.current_question_index, {})
+    correct_index_shuffled = shuffle_data.get('correct_index', question.correct_answer)
+    
     results = []
     for player in session.players:
         player_answer = next((a for a in player.answers if a.question_index == session.current_question_index), None)
@@ -235,13 +275,13 @@ async def show_question_results(session_id: str):
             results.append({
                 'player_name': player.name,
                 'answer_index': player_answer.answer_index,
-                'is_correct': player_answer.answer_index == question.correct_answer,
+                'is_correct': player_answer.answer_index == correct_index_shuffled,
                 'time_taken': player_answer.time_taken,
                 'points_earned': player_answer.points_earned
             })
     
     await sio.emit('question_results', {
-        'correct_answer': question.correct_answer,
+        'correct_answer': correct_index_shuffled,
         'results': results,
         'leaderboard': get_leaderboard(session)
     }, room=session_id)
@@ -268,8 +308,11 @@ async def submit_answer(sid, data):
     current_time = asyncio.get_event_loop().time()
     time_taken = current_time - session.question_start_time
     
-    question = session.questions[session.current_question_index]
-    is_correct = answer_index == question.correct_answer
+    # Get shuffle data for this question
+    shuffle_data = session.question_shuffles.get(session.current_question_index, {})
+    correct_index_shuffled = shuffle_data.get('correct_index', session.questions[session.current_question_index].correct_answer)
+    
+    is_correct = answer_index == correct_index_shuffled
     points = calculate_score(is_correct, time_taken, 10)
     
     answer = Answer(
@@ -281,9 +324,9 @@ async def submit_answer(sid, data):
     player.answers.append(answer)
     player.total_score += points
     
+    # DON'T send is_correct to player - only send points and confirmation
     await sio.emit('answer_submitted', {
-        'points_earned': points,
-        'is_correct': is_correct
+        'points_earned': points
     }, room=sid)
     
     await sio.emit('player_answered', {
@@ -307,11 +350,18 @@ def get_leaderboard(session: GameSession) -> List[dict]:
     """Get current leaderboard"""
     leaderboard = []
     for player in session.players:
+        # Get shuffle data to correctly count correct answers
+        correct_count = 0
+        for answer in player.answers:
+            shuffle_data = session.question_shuffles.get(answer.question_index, {})
+            correct_index = shuffle_data.get('correct_index', session.questions[answer.question_index].correct_answer)
+            if answer.answer_index == correct_index:
+                correct_count += 1
+        
         leaderboard.append({
             'name': player.name,
             'score': player.total_score,
-            'correct_answers': sum(1 for a in player.answers 
-                                  if a.answer_index == session.questions[a.question_index].correct_answer)
+            'correct_answers': correct_count
         })
     
     leaderboard.sort(key=lambda x: x['score'], reverse=True)
