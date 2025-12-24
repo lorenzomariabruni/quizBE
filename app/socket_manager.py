@@ -23,6 +23,7 @@ player_sessions: Dict[str, str] = {}  # player_name -> session_id
 @sio.event
 async def connect(sid, environ):
     print(f"✅ Client connected: {sid}")
+    print(f"📊 Current active sessions: {list(sessions.keys())}")
     await sio.emit('connection_established', {'sid': sid}, room=sid)
 
 
@@ -41,15 +42,22 @@ async def create_session(sid, data):
     session_id = data.get('session_id', 'QUIZ001')
     quiz_name = data.get('quiz_name')  # Optional: specific quiz to load
     
-    print(f"🎮 Creating session {session_id} with quiz: {quiz_name}")
+    print(f"\n{'='*60}")
+    print(f"🎮 CREATE SESSION REQUEST")
+    print(f"Session ID: {session_id}")
+    print(f"Quiz Name: {quiz_name}")
+    print(f"Host SID: {sid}")
+    print(f"{'='*60}\n")
     
     try:
         questions = load_questions(quiz_name)
     except FileNotFoundError as e:
+        print(f"❌ Error loading questions: {e}")
         await sio.emit('error', {'message': str(e)}, room=sid)
         return
     
     if not questions:
+        print(f"❌ No questions found in quiz {quiz_name}")
         await sio.emit('error', {'message': 'No questions found in quiz'}, room=sid)
         return
     
@@ -73,7 +81,10 @@ async def create_session(sid, data):
         'quiz_name': quiz_name,
         'total_questions': len(questions)
     }, room=sid)
-    print(f"✅ Session created: {session_id} with {len(questions)} questions")
+    
+    print(f"✅ Session created successfully!")
+    print(f"📊 Active sessions: {list(sessions.keys())}")
+    print(f"📝 Questions loaded: {len(questions)}\n")
 
 
 @sio.event
@@ -82,14 +93,26 @@ async def join_session(sid, data):
     session_id = data.get('session_id')
     player_name = data.get('player_name')
     
-    print(f"👤 Player {player_name} attempting to join session {session_id}")
+    print(f"\n{'='*60}")
+    print(f"👤 JOIN SESSION REQUEST")
+    print(f"Player Name: {player_name}")
+    print(f"Session ID: {session_id}")
+    print(f"Player SID: {sid}")
+    print(f"📊 Active sessions: {list(sessions.keys())}")
+    print(f"{'='*60}\n")
     
     if session_id not in sessions:
-        print(f"❌ Session {session_id} not found")
+        print(f"❌ SESSION NOT FOUND: {session_id}")
+        print(f"🔍 Available sessions: {list(sessions.keys())}")
+        print(f"💡 Tip: Make sure the host has created the session first\n")
         await sio.emit('error', {'message': 'Session not found'}, room=sid)
         return
     
     session = sessions[session_id]
+    print(f"✅ Session found: {session_id}")
+    print(f"🎮 Quiz: {session.quiz_name}")
+    print(f"📊 Current players: {[p.name for p in session.players]}")
+    print(f"🔄 Session state: {session.state}")
     
     # Check if player already exists (reconnection)
     existing_player = None
@@ -99,7 +122,7 @@ async def join_session(sid, data):
             break
     
     if existing_player:
-        print(f"🔄 Existing player {player_name} rejoining session {session_id}")
+        print(f"🔄 RECONNECTION detected for {player_name}")
         
         old_sid = existing_player.sid
         if old_sid in players:
@@ -149,12 +172,14 @@ async def join_session(sid, data):
                 'image_url': image_url
             }, room=sid)
         
-        print(f"✅ Player {player_name} successfully reconnected")
+        print(f"✅ {player_name} successfully reconnected\n")
     else:
         if session.state != 'waiting':
-            print(f"❌ Game already started, cannot join")
+            print(f"❌ Game already started, {player_name} cannot join\n")
             await sio.emit('error', {'message': 'Game already started'}, room=sid)
             return
+        
+        print(f"✨ NEW PLAYER joining: {player_name}")
         
         player = Player(sid=sid, name=player_name, session_id=session_id, connected=True)
         players[sid] = player
@@ -174,7 +199,8 @@ async def join_session(sid, data):
             'total_players': len([p for p in session.players if p.connected])
         }, room=session_id)
         
-        print(f"✅ Player {player_name} joined session {session_id}")
+        print(f"✅ {player_name} joined successfully")
+        print(f"📊 Total players now: {len(session.players)}\n")
 
 
 @sio.event
@@ -182,7 +208,11 @@ async def start_game(sid, data):
     """Host starts the game"""
     session_id = data.get('session_id')
     
-    print(f"🚀 Received start_game request for session {session_id} from {sid}")
+    print(f"\n{'='*60}")
+    print(f"🚀 START GAME REQUEST")
+    print(f"Session ID: {session_id}")
+    print(f"Requester SID: {sid}")
+    print(f"{'='*60}\n")
     
     if session_id not in sessions:
         print(f"❌ Session {session_id} not found")
@@ -192,26 +222,25 @@ async def start_game(sid, data):
     session = sessions[session_id]
     
     if session.host_sid != sid:
-        print(f"❌ Only host can start the game. Host: {session.host_sid}, Requester: {sid}")
+        print(f"❌ Permission denied. Host SID: {session.host_sid}, Requester: {sid}")
         await sio.emit('error', {'message': 'Only host can start the game'}, room=sid)
         return
     
     print(f"✅ Starting game for session {session_id}")
+    print(f"📊 Players: {[p.name for p in session.players]}")
     session.state = 'playing'
     
     # Emit game_started to all players
     await sio.emit('game_started', {}, room=session_id)
-    print(f"📤 Emitted game_started to room {session_id}")
+    print(f"📤 Emitted game_started to all players")
     
     # Start first question
-    print(f"🎯 Starting first question...")
+    print(f"🎯 Starting first question...\n")
     await next_question(session_id)
 
 
 async def next_question(session_id: str):
     """Move to next question and start timer"""
-    print(f"📝 next_question called for session {session_id}")
-    
     if session_id not in sessions:
         print(f"❌ Session {session_id} not found in next_question")
         return
@@ -219,18 +248,18 @@ async def next_question(session_id: str):
     session = sessions[session_id]
     session.current_question_index += 1
     
-    print(f"Question index: {session.current_question_index}/{len(session.questions)}")
+    print(f"\n📝 Question {session.current_question_index + 1}/{len(session.questions)}")
     
     if session.current_question_index >= len(session.questions):
-        print(f"🏁 All questions completed, ending game")
+        print(f"🏁 All questions completed, ending game\n")
         await end_game(session_id)
         return
     
     question = session.questions[session.current_question_index]
     session.question_start_time = asyncio.get_event_loop().time()
     
-    print(f"❓ Question: {question.question}")
-    print(f"Original answers: {question.answers}")
+    print(f"❓ {question.question}")
+    print(f"📝 Original answers: {question.answers}")
     
     # Shuffle answers and track the mapping
     original_answers = question.answers.copy()
@@ -242,8 +271,8 @@ async def next_question(session_id: str):
     # Find new position of correct answer
     new_correct_index = shuffled_indices.index(question.correct_answer)
     
-    print(f"Shuffled answers: {shuffled_answers}")
-    print(f"Original correct index: {question.correct_answer}, New correct index: {new_correct_index}")
+    print(f"🔀 Shuffled answers: {shuffled_answers}")
+    print(f"✅ Correct answer: index {new_correct_index} ({shuffled_answers[new_correct_index]})")
     
     # Store shuffle mapping for this question
     session.question_shuffles[session.current_question_index] = {
@@ -268,17 +297,15 @@ async def next_question(session_id: str):
         'image_url': image_url
     }
     
-    print(f"📤 Emitting new_question to room {session_id}")
+    print(f"📤 Emitting new_question to all players")
     await sio.emit('new_question', question_data, room=session_id)
     
-    print(f"⏱️ Starting countdown timer")
+    print(f"⏱️ Starting 10 second countdown\n")
     await countdown_timer(session_id, 10)
 
 
 async def countdown_timer(session_id: str, duration: int):
     """Countdown timer for questions"""
-    print(f"⏱️ Timer started for {duration} seconds")
-    
     for remaining in range(duration, 0, -1):
         if session_id not in sessions:
             print(f"❌ Session ended during timer")
@@ -291,7 +318,6 @@ async def countdown_timer(session_id: str, duration: int):
     await sio.emit('time_up', {}, room=session_id)
     await asyncio.sleep(2)
     
-    print(f"📊 Showing question results")
     await show_question_results(session_id)
 
 
@@ -307,7 +333,8 @@ async def show_question_results(session_id: str):
     shuffle_data = session.question_shuffles.get(session.current_question_index, {})
     correct_index_shuffled = shuffle_data.get('correct_index', question.correct_answer)
     
-    print(f"📈 Calculating results. Correct answer index: {correct_index_shuffled}")
+    print(f"\n📈 QUESTION RESULTS")
+    print(f"Correct answer: {correct_index_shuffled}")
     
     results = []
     for player in session.players:
@@ -321,7 +348,8 @@ async def show_question_results(session_id: str):
                 'time_taken': player_answer.time_taken,
                 'points_earned': player_answer.points_earned
             })
-            print(f"Player {player.name}: answer={player_answer.answer_index}, correct={is_correct}, points={player_answer.points_earned}")
+            status = "✅" if is_correct else "❌"
+            print(f"{status} {player.name}: answer {player_answer.answer_index}, {player_answer.points_earned} points")
     
     leaderboard = get_leaderboard(session)
     
@@ -331,10 +359,8 @@ async def show_question_results(session_id: str):
         'leaderboard': leaderboard
     }, room=session_id)
     
-    print(f"✅ Results sent, waiting 3 seconds before next question")
+    print(f"⏳ Waiting 3 seconds before next question\n")
     await asyncio.sleep(3)
-    
-    print(f"➡️ Moving to next question")
     await next_question(session_id)
 
 
@@ -350,10 +376,10 @@ async def submit_answer(sid, data):
     
     answer_index = data.get('answer_index')
     
-    print(f"📥 Player {player.name} submitted answer: {answer_index}")
+    print(f"📥 {player.name} submitted answer: {answer_index}")
     
     if any(a.question_index == session.current_question_index for a in player.answers):
-        print(f"❌ Player already answered this question")
+        print(f"❌ {player.name} already answered this question")
         await sio.emit('error', {'message': 'Already answered'}, room=sid)
         return
     
@@ -367,7 +393,8 @@ async def submit_answer(sid, data):
     is_correct = answer_index == correct_index_shuffled
     points = calculate_score(is_correct, time_taken, 10)
     
-    print(f"✓ Answer evaluation: correct={is_correct}, time={time_taken:.2f}s, points={points}")
+    status = "✅" if is_correct else "❌"
+    print(f"{status} {player.name}: correct={is_correct}, time={time_taken:.2f}s, points={points}")
     
     answer = Answer(
         question_index=session.current_question_index,
@@ -386,8 +413,6 @@ async def submit_answer(sid, data):
     await sio.emit('player_answered', {
         'player_name': player.name
     }, room=session.host_sid)
-    
-    print(f"✅ Answer recorded for {player.name}")
 
 
 async def end_game(session_id: str):
@@ -395,18 +420,24 @@ async def end_game(session_id: str):
     if session_id not in sessions:
         return
     
-    print(f"🏁 Ending game for session {session_id}")
+    print(f"\n{'='*60}")
+    print(f"🏁 GAME OVER - {session_id}")
     
     session = sessions[session_id]
     session.state = 'finished'
     
     leaderboard = get_leaderboard(session)
     
+    print(f"\n🏆 FINAL LEADERBOARD:")
+    for i, player_data in enumerate(leaderboard, 1):
+        medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else "  "
+        print(f"{medal} {i}. {player_data['name']}: {player_data['score']} points ({player_data['correct_answers']} correct)")
+    
+    print(f"{'='*60}\n")
+    
     await sio.emit('game_over', {
         'leaderboard': leaderboard
     }, room=session_id)
-    
-    print(f"✅ Game over sent to all players")
 
 
 def get_leaderboard(session: GameSession) -> List[dict]:
