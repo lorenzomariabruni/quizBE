@@ -6,6 +6,8 @@ class Question(BaseModel):
     question: str
     answers: List[str]
     correct_answer: int  # Index of correct answer (0-3)
+    question_type: str = 'text'  # 'text' or 'image'
+    image: Optional[str] = None  # Image filename if type is 'image'
 
 
 class Answer(BaseModel):
@@ -27,6 +29,7 @@ class Player(BaseModel):
 class GameSession(BaseModel):
     session_id: str
     host_sid: str
+    quiz_name: Optional[str] = None  # Name of the quiz being played
     players: List[Player] = []
     questions: List[Question]
     current_question_index: int = -1

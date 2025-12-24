@@ -9,14 +9,14 @@ sio = socketio.AsyncServer(
     cors_allowed_origins='*',
     logger=True,
     engineio_logger=True,
-    ping_timeout=60,  # Increased timeout for mobile devices
-    ping_interval=25,  # More frequent pings
+    ping_timeout=60,
+    ping_interval=25,
 )
 
 # In-memory storage
 sessions: Dict[str, GameSession] = {}
 players: Dict[str, Player] = {}  # sid -> Player
-player_sessions: Dict[str, str] = {}  # player_name -> session_id (for recovery)
+player_sessions: Dict[str, str] = {}  # player_name -> session_id
 
 
 @sio.event
@@ -31,8 +31,6 @@ async def disconnect(sid):
     if sid in players:
         player = players[sid]
         print(f"Player {player.name} disconnected but keeping in session for recovery")
-        # Don't remove player immediately - allow reconnection
-        # Just mark as disconnected
         player.connected = False
 
 
@@ -40,11 +38,22 @@ async def disconnect(sid):
 async def create_session(sid, data):
     """Host creates a new game session"""
     session_id = data.get('session_id', 'QUIZ001')
-    questions = load_questions()
+    quiz_name = data.get('quiz_name')  # Optional: specific quiz to load
+    
+    try:
+        questions = load_questions(quiz_name)
+    except FileNotFoundError as e:
+        await sio.emit('error', {'message': str(e)}, room=sid)
+        return
+    
+    if not questions:
+        await sio.emit('error', {'message': 'No questions found in quiz'}, room=sid)
+        return
     
     session = GameSession(
         session_id=session_id,
         host_sid=sid,
+        quiz_name=quiz_name,
         questions=questions,
         current_question_index=-1,
         state='waiting'
@@ -54,9 +63,10 @@ async def create_session(sid, data):
     await sio.enter_room(sid, session_id)
     await sio.emit('session_created', {
         'session_id': session_id,
+        'quiz_name': quiz_name,
         'total_questions': len(questions)
     }, room=sid)
-    print(f"Session created: {session_id}")
+    print(f"Session created: {session_id} with quiz: {quiz_name}")
 
 
 @sio.event
@@ -71,7 +81,7 @@ async def join_session(sid, data):
     
     session = sessions[session_id]
     
-    # Check if player already exists (reconnection scenario)
+    # Check if player already exists (reconnection)
     existing_player = None
     for p in session.players:
         if p.name == player_name:
@@ -79,10 +89,8 @@ async def join_session(sid, data):
             break
     
     if existing_player:
-        # This is a reconnection
         print(f"Existing player {player_name} rejoining session {session_id}")
         
-        # Update socket ID
         old_sid = existing_player.sid
         if old_sid in players:
             del players[old_sid]
@@ -101,7 +109,6 @@ async def join_session(sid, data):
             'total_score': existing_player.total_score
         }, room=sid)
         
-        # Send current game state
         if session.state == 'playing' and session.current_question_index >= 0:
             question = session.questions[session.current_question_index]
             already_answered = any(
@@ -109,18 +116,24 @@ async def join_session(sid, data):
                 for a in existing_player.answers
             )
             
+            # Build image URL if question has image
+            image_url = None
+            if question.question_type == 'image' and question.image and session.quiz_name:
+                image_url = f"/api/quizzes/{session.quiz_name}/images/{question.image}"
+            
             await sio.emit('new_question', {
                 'question_number': session.current_question_index + 1,
                 'total_questions': len(session.questions),
                 'question': question.question,
                 'answers': question.answers,
                 'time_limit': 10,
-                'already_answered': already_answered
+                'already_answered': already_answered,
+                'type': question.question_type,
+                'image_url': image_url
             }, room=sid)
         
         print(f"Player {player_name} successfully reconnected")
     else:
-        # New player joining
         if session.state != 'waiting':
             await sio.emit('error', {'message': 'Game already started'}, room=sid)
             return
@@ -138,7 +151,6 @@ async def join_session(sid, data):
             'game_state': session.state
         }, room=sid)
         
-        # Notify all players
         await sio.emit('player_joined', {
             'player_name': player_name,
             'total_players': len([p for p in session.players if p.connected])
@@ -165,7 +177,6 @@ async def start_game(sid, data):
     session.state = 'playing'
     await sio.emit('game_started', {}, room=session_id)
     
-    # Start first question
     await next_question(session_id)
 
 
@@ -175,24 +186,28 @@ async def next_question(session_id: str):
     session.current_question_index += 1
     
     if session.current_question_index >= len(session.questions):
-        # Game over
         await end_game(session_id)
         return
     
     question = session.questions[session.current_question_index]
     session.question_start_time = asyncio.get_event_loop().time()
     
-    # Send question to all
+    # Build image URL if question has image
+    image_url = None
+    if question.question_type == 'image' and question.image and session.quiz_name:
+        image_url = f"/api/quizzes/{session.quiz_name}/images/{question.image}"
+    
     await sio.emit('new_question', {
         'question_number': session.current_question_index + 1,
         'total_questions': len(session.questions),
         'question': question.question,
         'answers': question.answers,
         'time_limit': 10,
-        'already_answered': False
+        'already_answered': False,
+        'type': question.question_type,
+        'image_url': image_url
     }, room=session_id)
     
-    # Start timer
     await countdown_timer(session_id, 10)
 
 
@@ -202,11 +217,9 @@ async def countdown_timer(session_id: str, duration: int):
         await sio.emit('timer_update', {'remaining': remaining}, room=session_id)
         await asyncio.sleep(1)
     
-    # Time's up
     await sio.emit('time_up', {}, room=session_id)
-    await asyncio.sleep(2)  # Show correct answer
+    await asyncio.sleep(2)
     
-    # Show results and move to next
     await show_question_results(session_id)
 
 
@@ -215,7 +228,6 @@ async def show_question_results(session_id: str):
     session = sessions[session_id]
     question = session.questions[session.current_question_index]
     
-    # Calculate scores and gather results
     results = []
     for player in session.players:
         player_answer = next((a for a in player.answers if a.question_index == session.current_question_index), None)
@@ -249,21 +261,17 @@ async def submit_answer(sid, data):
     
     answer_index = data.get('answer_index')
     
-    # Check if already answered
     if any(a.question_index == session.current_question_index for a in player.answers):
         await sio.emit('error', {'message': 'Already answered'}, room=sid)
         return
     
-    # Calculate time taken
     current_time = asyncio.get_event_loop().time()
     time_taken = current_time - session.question_start_time
     
-    # Calculate score
     question = session.questions[session.current_question_index]
     is_correct = answer_index == question.correct_answer
     points = calculate_score(is_correct, time_taken, 10)
     
-    # Save answer
     answer = Answer(
         question_index=session.current_question_index,
         answer_index=answer_index,
@@ -278,7 +286,6 @@ async def submit_answer(sid, data):
         'is_correct': is_correct
     }, room=sid)
     
-    # Notify host
     await sio.emit('player_answered', {
         'player_name': player.name
     }, room=session.host_sid)
