@@ -19,8 +19,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routes
-app.include_router(router)
+# Include routes with /api prefix
+app.include_router(router, prefix="/api")
 
 # Mount Socket.IO
 socket_app = socketio.ASGIApp(sio, app)
