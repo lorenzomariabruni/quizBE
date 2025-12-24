@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 
 class Question(BaseModel):
@@ -35,3 +35,7 @@ class GameSession(BaseModel):
     current_question_index: int = -1
     state: str = 'waiting'  # waiting, playing, finished
     question_start_time: Optional[float] = None
+    question_shuffles: Dict[int, Dict[str, Any]] = {}  # Maps question_index to shuffle data
+    
+    class Config:
+        arbitrary_types_allowed = True
